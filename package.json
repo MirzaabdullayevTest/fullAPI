@@ -18,6 +18,8 @@
   },
   "homepage": "https://github.com/MirzaabdullayevTest/fullAPI#readme",
   "dependencies": {
-    "express": "^4.18.1"
+    "express": "^4.18.1",
+    "joi": "^17.6.0",
+    "morgan": "^1.10.0"
   }
 }
