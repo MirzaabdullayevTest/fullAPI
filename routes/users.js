@@ -2,7 +2,6 @@ const Joi = require('joi')
 const { Router } = require('express')
 const router = Router()
 
-
 const users = [
     { name: 'Tom', age: 50, id: 1 },
     { name: 'Harry', age: 10, id: 2 },
@@ -58,4 +57,35 @@ router.post('/add', (req, res) => {
 })
 
 // delete // update
+router.delete('/delete/:id', (req, res) => {
+    const id = +req.params.id
+    const idx = users.findIndex((val, index) => val.id === id)
+
+    if (idx < 0) {
+        return res.status(400).send('Id not found')
+    }
+
+    users.splice(idx, 1)
+
+    res.status(200).send('User deleted')
+})
+
+router.put('/update/:id', (req, res) => {
+    const id = +req.params.id
+    const idx = users.findIndex((val, index) => val.id === id)
+
+    if (idx < 0) {
+        return res.status(400).send('Id not found')
+    }
+    
+    if(!req.body.name){
+        req.body.name = users[idx].name
+    }
+
+    req.body.id = id 
+
+    users[idx] = req.body
+
+    res.status(200).send('User updated')
+})
 module.exports = router

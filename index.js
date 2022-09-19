@@ -1,16 +1,22 @@
 const express = require('express')
 const app = express()
 const morgan = require('morgan')
+const path = require('path')
 
+require('dotenv').config()
+
+app.set('views', 'views');
+app.set('view engine', 'pug');
 // Importing routes
 const homeRouter = require('./routes/home')
 const usersRouter = require('./routes/users')
 
-
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 
-if(process.env.NODE_ENV === 'development'){
+app.use(express.static(path.join(__dirname, 'public'))) 
+
+if (process.env.NODE_ENV === 'development') {
     app.use(morgan('tiny'))
 }
 
@@ -27,8 +33,7 @@ app.use(function logger(req, res, next) {
 app.use('/', homeRouter)
 app.use('/users', usersRouter)
 
-
-const port = process.env.PORT || 3000
+const port = process.env.PORT || 3001
 app.listen(port, () => {
     console.log('Server working on port ', port);
 })
