@@ -1,12 +1,10 @@
 const Joi = require('joi')
 const { Router } = require('express')
 const router = Router()
+const fs = require('fs')
+const path = require('path')
 
-const users = [
-    { name: 'Tom', age: 50, id: 1 },
-    { name: 'Harry', age: 10, id: 2 },
-    { name: 'Elizabeth II', age: 96, id: 3 },
-]
+const users = []
 
 router.get('/', (req, res) => {
     res.status(200).send(users)
@@ -22,19 +20,7 @@ router.get('/:id', (req, res) => {
     res.status(200).send(user)
 })
 
-router.post('/add', (req, res) => {
-    // if (!req.body.name) {
-    //     return res.status(404).send('Name is required!')
-    // }
-
-    // if (req.body.name.trim().length < 3) {
-    //     return res.status(404).send('Min length 3 of name')
-    // }
-
-    // if (!req.body.age) {
-    //     return res.status(404).send('Age is required!')
-    // }
-
+router.post('/add', async (req, res) => {
     const schema = Joi.object({
         name: Joi.string().trim().required().min(3),
         age: Joi.number().integer().required().min(6).max(100)
@@ -53,6 +39,27 @@ router.post('/add', (req, res) => {
     }
 
     users.push(user)
+
+    const data = await new Promise((resolve, reject)=>{
+        fs.readFile(path.join(__dirname, '..', 'data', 'db.json'), 
+       'utf-8', 
+        (err, data)=>{
+            if(err) reject(err)
+            resolve(data)
+        })
+    })
+
+    console.log(data);
+
+    await new Promise((resolve, reject)=>{
+        fs.writeFile(path.join(__dirname, '..', 'data', 'db.json'), 
+        JSON.stringify(users), 
+        (err)=>{
+            if(err) reject(err)
+            resolve()
+        })
+    })
+
     res.status(201).send('User created')
 })
 
