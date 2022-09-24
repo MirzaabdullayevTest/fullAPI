@@ -1,13 +1,13 @@
 const Joi = require('joi')
 const { Router } = require('express')
 const router = Router()
-const fs = require('fs')
-const path = require('path')
+const User =  require('../model/User')
+const modelUser = new User()
 
-const users = []
+router.get('/', async (req, res) => {
+    const data = await modelUser.getData()
 
-router.get('/', (req, res) => {
-    res.status(200).send(users)
+    res.status(200).send(data.users)
 })
 
 router.get('/user', (req, res) => {
@@ -21,58 +21,44 @@ router.get('/:id', (req, res) => {
 })
 
 router.post('/add', async (req, res) => {
-    const schema = Joi.object({
-        name: Joi.string().trim().required().min(3),
-        age: Joi.number().integer().required().min(6).max(100)
-    })
+    const check = validation(req.body)
 
-    const validation = schema.validate(req.body)
-
-    if (!!validation.error) {
+    if (!!check.error) {
         return res.status(400).send(validation.error.message)
     }
 
     const user = {
-        id: users.length + 1,
         name: req.body.name,
         age: req.body.age
     }
 
-    users.push(user)
-
-    const data = await new Promise((resolve, reject)=>{
-        fs.readFile(path.join(__dirname, '..', 'data', 'db.json'), 
-       'utf-8', 
-        (err, data)=>{
-            if(err) reject(err)
-            resolve(data)
-        })
-    })
-
-    console.log(data);
-
-    await new Promise((resolve, reject)=>{
-        fs.writeFile(path.join(__dirname, '..', 'data', 'db.json'), 
-        JSON.stringify(users), 
-        (err)=>{
-            if(err) reject(err)
-            resolve()
-        })
-    })
+    await modelUser.create(user)
 
     res.status(201).send('User created')
 })
 
+function validation(body){
+    const schema =  Joi.object({
+        name: Joi.string().trim().required().min(3),
+        age: Joi.number().integer().required().min(6).max(100)
+    })
+
+    return schema.validate(body)
+}
+
 // delete // update
-router.delete('/delete/:id', (req, res) => {
+router.delete('/delete/:id', async (req, res) => {
+    const data = await modelUser.getData()
     const id = +req.params.id
-    const idx = users.findIndex((val, index) => val.id === id)
+    const idx = data.users.findIndex((val) => val.id === id)
 
     if (idx < 0) {
         return res.status(400).send('Id not found')
     }
 
-    users.splice(idx, 1)
+    data.users.splice(idx, 1)
+
+    await modelUser.save(data)
 
     res.status(200).send('User deleted')
 })
@@ -95,4 +81,5 @@ router.put('/update/:id', (req, res) => {
 
     res.status(200).send('User updated')
 })
+
 module.exports = router
